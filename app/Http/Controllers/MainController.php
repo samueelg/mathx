@@ -12,7 +12,7 @@ class MainController extends Controller
         return view('home');
     }
 
-    public function generateExercise(Request $request)
+    public function generateExercise(Request $request): View
     {
         $request->validate([
             'check_sum' => 'required_without_all:check_subtraction,check_multiplication,check_division',
@@ -25,10 +25,12 @@ class MainController extends Controller
         ]);
 
         $operations = [];
-        $operations[] = $request->check_sum ? 'sum' : '';
-        $operations[] = $request->check_subtraction ? 'subtraction' : '';
-        $operations[] = $request->check_division ? 'division' : '';
-        $operations[] = $request->check_multiplication ? 'multiplication' : '';
+
+        if($request->check_sum){ $operarions[] = 'sum';}
+        if($request->check_subtraction){ $operations[] = 'subtraction';}
+        if($request->check_division){ $operations[] = 'division';}
+        if($request->check_multiplication){ $operations[] = 'multiplication';}
+
 
         $min = $request->number_one;
         $max = $request->number_two;
@@ -54,16 +56,23 @@ class MainController extends Controller
                     $sollution = $number1 - $number2;
                     break;
                 case 'division':
-                    $exercise = "$number1 / $number2 =";
+                    if($number2 == 0){
+                        $number2 = 1;
+                    }
+                    $exercise = "$number1 : $number2 =";
                     $sollution = $number1 / $number2;
                     break;
                 case 'multiplication':
-                    $exercise = "$number1 * $number2 =";
+                    $exercise = "$number1 x $number2 =";
                     $sollution = $number1 * $number2;
                     break;
             }
-
+            if(is_float($sollution)){
+                $sollution = round($sollution,2);
+            }
+            
             $exercises[] = [
+                'operation' => $operation,
                 'exercise_number' => $index,
                 'exercise' => $exercise,
                 'sollution' => "$exercise $sollution"
@@ -71,7 +80,7 @@ class MainController extends Controller
 
         }
 
-        dd($exercises);
+        return view('operations', ['exercises' => $exercises]);
     }
         public function printExercises()
     {
