@@ -12,7 +12,7 @@ class MainController extends Controller
         return view('home');
     }
 
-    public function generateExercise(Request $request): View
+    public function generateExercises(Request $request): View
     {
         $request->validate([
             'check_sum' => 'required_without_all:check_subtraction,check_multiplication,check_division',
@@ -39,7 +39,41 @@ class MainController extends Controller
 
         $exercises = [];
         for($index = 1; $index <= $numberExercises; $index++){
-            $operation = $operations[array_rand($operations)];
+            $exercises[] = $this->generateExercise($index,$operations,$min,$max);
+        }
+        session(['exercises' => $exercises]);
+
+        return view('operations', ['exercises' => $exercises]);
+    }
+        public function printExercises()
+    {
+        if(!session()->has('exercises')){
+            return redirect()->route('home');
+        }
+        
+        $exercises = session('exercises');
+        echo '<pre>';
+        echo '<h1>Exercicios de Matematica (' .env('APP_NAME'). ')</h1>';
+        echo '<hr>';
+
+        foreach($exercises as $exercise){
+            echo '<h2><small>'. str_pad($exercise['exercise_number'],2,'0', STR_PAD_LEFT). '>> </small>' . $exercise['exercise'] . '</h2>';
+        }
+
+        echo '<hr>';
+        echo '<small>Soluções</small><br>';
+                foreach($exercises as $exercise){
+            echo '<small>'. str_pad($exercise['exercise_number'],2,'0', STR_PAD_LEFT). '>> ' . $exercise['sollution'] . '</small><br>';
+        }
+
+    }
+        public function exportExercise()
+    {
+        echo 'exportar exercicios para um arquivo';
+    }
+    private function generateExercise($index, $operations, $min, $max): array
+    {
+    $operation = $operations[array_rand($operations)];
             $number1 = rand($min,$max);
             $number2 = rand($min,$max);
 
@@ -71,23 +105,11 @@ class MainController extends Controller
                 $sollution = round($sollution,2);
             }
             
-            $exercises[] = [
+            return [
                 'operation' => $operation,
                 'exercise_number' => $index,
                 'exercise' => $exercise,
                 'sollution' => "$exercise $sollution"
             ];
-
-        }
-
-        return view('operations', ['exercises' => $exercises]);
-    }
-        public function printExercises()
-    {
-        echo 'imprimir exercicios no navegador';
-    }
-        public function exportExercise()
-    {
-        echo 'exportar exercicios para um arquivo';
     }
 }
